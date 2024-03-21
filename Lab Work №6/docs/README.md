@@ -2,148 +2,211 @@
 
 ## Порождающие шаблоны
 
-### Фабричный метод
+### Простая фабрика
 
 В объектно ориентированном программировании фабрикой называется объект, создающий другие объекты. Формально фабрика — это функция или метод, возвращающая объекты разных прототипов или классов из вызова какого-то метода, который считается новым.
 
+**Код**
+
+```c#
+// интерфейс автоматов
+interface VendMachine
+{
+    public decimal getWidth();
+    public decimal getHeight();
+}
+
+// реализация 
+class VendMachineWithCells: VendMachine
+{
+    private decimal width;
+    private decimal height;
+
+    public VendMachineWithCells(decimal width, decimal height)
+    {
+        this.width = width;
+        this.height = height;
+    }
+
+    public decimal getWidth() {
+        return width;
+    }
+
+    public decimal getHeight() {
+        return height;
+    }
+}
+
+
+// Фабрика
+public static class VendMachineFactory
+{
+    public static VendMachine makeVend(decimal width, decimal height)
+    {
+        return new VendMachineWithCells(width, height);
+    }
+}
+```
+
 **Схема**
 
 ```mermaid
 classDiagram
-    class Product {
-        +name: string
-        +price: number
-    }   class Drink {
-        +name: string
-        +price: number
-        constructor(name: string, price: number)
+    class VendMachine {
+        +getWidth(): decimal
+        +getHeight(): decimal
+    }   
+    class VendMachineWithCells {
+        +width: decimal
+        +height: decimal
+        constructor(width: decimal, height: decimal)
+        +getWidth(): decimal
+        +getHeight(): decimal
     }
-    class VendingMachineFactory {
-        +createProduct(): Product
+    class VendMachineFactory {
+        +makeVend(width: decimal, height: decimal): VendMachine
     }
-    class DrinkVendingMachineFactory {
-        +createProduct(): Product
-    }
-
-    Product <|-- Drink : implements
-    VendingMachineFactory <|.. DrinkVendingMachineFactory : creates
+    VendMachine <|-- VendMachineWithCells : implements
+    VendMachineWithCells <|.. VendMachineFactory : creates
 ```
 
-**Код**
-
-```typescript
-// Интерфейс продукта
-interface Product {
-    Name: string;
-    Price: number;
-}
-
-// Класс конкретного продукта
-class Drink implements Product {
-    constructor(public Name: string, public Price: number) {}
-}
-
-// Фабричный метод для создания продуктов
-abstract class VendingMachineFactory {
-    abstract createProduct(): Product;
-}
-
-// Конкретная фабрика для создания напитков
-class DrinkVendingMachineFactory extends VendingMachineFactory {
-    createProduct(): Product {
-        return new Drink("Cola", 1.5);
-    }
-}
-
-const drinkFactory = new DrinkVendingMachineFactory();
-const product = drinkFactory.createProduct();
-console.log(product);
-
-```
 
 ### Абстрактная фабрика
 
+Шаблон «Абстрактная фабрика» описывает способ инкапсулирования группы индивидуальных фабрик, объединённых некой темой, без указания для них конкретных классов.
 Абстрактная фабрика - это способ организации создания связанных объектов без необходимости знать о конкретных классах этих объектов.
+
+**Код**
+
+```C#
+// интерфейс автоматов
+interface VendMachine
+{
+    public string getDescription();
+}
+
+// реализация с ячейками
+class VendMachineWithCells: VendMachine
+{
+    public string getDescription() { return "Автомат ячеечного типа"; }
+}
+
+// реализация снековых автоматов
+class VendMachineSnack: VendMachine
+{
+    public string getDescription() { return "Автомат снекового типа"; }
+}
+
+//интерфейс техника
+interface Technic
+{
+    public string getDescription();
+}
+
+//техник ячеечного автомата
+class CellTechnic: Technic
+{
+    public string getDescription() { return 'Я умею работать только с ячейками'; }
+}
+
+//техник снекового автомата
+class SnackTechnic: Technic
+{
+    public string getDescription() { return 'Я умею работать только с блистерами'; }
+}
+
+
+// абстрактная фабрика
+interface VendMachineFactory
+{
+    public VendMachine makeVend();
+    public Technic makeTechnic();
+}
+
+//фабрика ячеечных автоматов 
+class VendMachineWithCellsFactory: VendMachineFactory
+{
+    public VendMachine makeVend() { return new VendMachineWithCells(); }
+    public Technic makeTechnic() { return new CellTechnic(); }
+}
+
+//фабрика снековых автоматов 
+class VendMachineSnackFactory: VendMachineFactory
+{
+    public VendMachine makeVend() { return new VendMachineSnack(); }
+    public Technic makeTechnic() { return new SnackTechnic(); }
+}
+```
 
 **Схема**
 
 ```mermaid
 classDiagram
-    class Product {
-        +Name: string
-        +Price: number
+    class VendMachine {
+        +getDescription(): string
+    }   
+    class VendMachineWithCells {
+        +getDescription(): string
     }
-    class Drink {
-        +Name: string
-        +Price: number
+    class VendMachineSnack {
+        +getDescription(): string
+    }    
+    class Technic {
+        +getDescription(): string
+    }   
+    class CellTechnic {
+        +getDescription(): string
     }
-    class Snack {
-        +Name: string
-        +Price: number
+    class SnackTechnic {
+        +getDescription(): string
     }
-    class VendingMachineFactory {
-        +createDrink(): Product
-        +createSnack(): Product
+    class VendMachineFactory {
+        +makeVend(): VendMachine
+        +makeTechnic(): Technic
     }
-    class DrinkSnackVendingMachineFactory {
-        +createDrink(): Product
-        +createSnack(): Product
+    class VendMachineWithCellsFactory {
+        +makeVend(): VendMachine
+        +makeTechnic(): Technic
     }
-
-    Product <|-- Drink : implements
-    Product <|-- Snack : implements
-    VendingMachineFactory <|-- DrinkSnackVendingMachineFactory : implements
-    DrinkSnackVendingMachineFactory <|.. Drink : creates
-    DrinkSnackVendingMachineFactory <|.. Snack : creates
-```
-
-**Код**
-
-```typescript
-// Абстрактный класс продукта
-abstract class Product {
-    abstract Name: string;
-    abstract Price: number;
-}
-
-// Конкретные продукты
-class Drink extends Product {
-    Name = "Cola";
-    Price = 1.5;
-}
-
-class Snack extends Product {
-    Name = "Chips";
-    Price = 2;
-}
-
-// Абстрактная фабрика
-abstract class VendingMachineFactory {
-    abstract createDrink(): Product;
-    abstract createSnack(): Product;
-}
-
-// Конкретная фабрика для создания напитков и закусок
-class DrinkSnackVendingMachineFactory extends VendingMachineFactory {
-    createDrink(): Product {
-        return new Drink();
+    class VendMachineSnackFactory {
+        +makeVend(): VendMachine
+        +makeTechnic(): Technic
     }
-
-    createSnack(): Product {
-        return new Snack();
-    }
-}
-
-const machineFactory = new DrinkSnackVendingMachineFactory();
-const drink = machineFactory.createDrink();
-const snack = machineFactory.createSnack();
-console.log(drink); 
-console.log(snack); 
+    VendMachine <|-- VendMachineWithCells : implements
+    VendMachine <|-- VendMachineSnack : implements
+    Technic <|-- CellTechnic : implements
+    Technic <|-- SnackTechnic : implements
+    VendMachineFactory <|-- VendMachineWithCellsFactory : implements
+    VendMachineFactory <|-- VendMachineSnackFactory : implements
+    VendMachineWithCells <|.. VendMachineWithCellsFactory : creates
+    CellTechnic <|.. VendMachineWithCellsFactory : creates
+    VendMachineSnack <|.. VendMachineSnackFactory : creates
+    SnackTechnic <|.. VendMachineSnackFactory : creates
 ```
 
 ### Одиночка
 
-Одиночка - это способ создания класса таким образом, чтобы он имел только один экземпляр и предоставлял глобальную точку доступа к этому экземпляру.
+Шаблон «Одиночка» позволяет ограничивать создание класса единственным объектом. Это удобно, когда для координации действий в рамках системы требуется, чтобы объект был единственным в своём классе. Таким образом, одиночка - это способ создания класса таким образом, чтобы он имел только один экземпляр и предоставлял глобальную точку доступа к этому экземпляру.
+
+**Код**
+
+```C#
+// Класс управления вендинговыми автоматами (Одиночка)
+class VendingMachineManager {
+    private static instance: VendingMachineManager;
+
+    private VendingMachineManager() { }
+
+    public static VendingMachineManager getInstance()
+    {
+        if (VendingMachineManager.instance == null) 
+        {
+            VendingMachineManager.instance = new VendingMachineManager();
+        }
+        return VendingMachineManager.instance;
+    }
+}
+```
 
 **Схема**
 
@@ -152,57 +215,83 @@ classDiagram
     class VendingMachineManager {
         -instance: VendingMachineManager
         +getInstance(): VendingMachineManager
-        +refillProducts(): void
         -constructor()
     }
 
-    VendingMachineManager ..> VendingMachineManager : "1" creates
+    VendingMachineManager ..|> VendingMachineManager : "1" creates
 ```
-
-**Код**
-
-```typescript
-// Класс управления вендинговыми автоматами (Одиночка)
-class VendingMachineManager {
-    private static instance: VendingMachineManager;
-
-    private constructor() {}
-
-    static getInstance(): VendingMachineManager {
-        if (!VendingMachineManager.instance) {
-            VendingMachineManager.instance = new VendingMachineManager();
-        }
-        return VendingMachineManager.instance;
-    }
-
-    // Другие методы для управления вендинговыми автоматами
-    refillProducts() {
-        console.log("Refilling products...");
-    }
-}
-
-const manager1 = VendingMachineManager.getInstance();
-const manager2 = VendingMachineManager.getInstance();
-
-console.log(manager1 === manager2); 
-manager1.refillProducts(); 
-```
-
 
 ## Структурные шаблоны
 
-
 ### Адаптер
 
-Адаптер - паттерн проектирования, который позволяет объектам с несовместимыми интерфейсами работать вместе.
+Шаблон проектирования «Адаптер» позволяет использовать интерфейс существующего класса как другой интерфейс. Этот шаблон часто применяется для обеспечения работы одних классов с другими без изменения их исходного кода. Таким образом, адаптер - паттерн проектирования, который позволяет объектам с несовместимыми интерфейсами работать вместе.
+
+**Код**
+
+```C#
+// интерфейс внешней библиотеки
+interface ExternalVendingMachine 
+{
+    public void selectProduct();
+    public void pay(decimal money);
+}
+
+//внутренний интерфейс
+interface VendingMachine 
+{
+    public void selectProduct();
+    public void insertCoin(int amount);
+}
+
+// класс внешней библиотеки
+class LegacyVendingMachine: ExternalVendingMachine 
+{
+    selectProduct() { Log.INFO("Selecting product"); }
+
+    pay(decimal money) { Log.INFO($"Payed {money}"); }
+}
+
+//адаптер
+class VendingMachineAdapter: VendingMachine 
+{
+    private LegacyVendingMachine legacyMachine;
+
+    public VendingMachineAdapter(LegacyVendingMachine legacyMachine) {
+        this.legacyMachine = legacyMachine;
+    }    
+
+    public VendingMachineAdapter() {
+        this.legacyMachine = new LegacyVendingMachine();
+    }
+
+    public void selectProduct() {
+        this.legacyMachine.selectProduct();
+    }
+
+    public void insertCoin(int amount) {
+        this.legacyMachine.pay((decimal)amount);
+    }
+}
+```
 
 **Схема**
 
 ```mermaid
 classDiagram
-    class LegacyVendingMachine {
+    class ExternalVendingMachine {
         selectProduct()
-        insertCoin(amount: number)
+        pay(money: decimal)
+    }
+
+    class LegacyVendingMachine {
+        +selectProduct()
+        +pay(money: decimal)
+    }
+
+    class VendingMachine {
+        selectProduct()
+        insertCoin(amount: int)
     }
 
     class VendingMachineAdapter {
@@ -212,56 +301,64 @@ classDiagram
         +insertCoin(amount: number): void
     }
 
-    LegacyVendingMachine <|-- VendingMachineAdapter : implements
+    LegacyVendingMachine <|.. VendingMachineAdapter : creates
+    ExternalVendingMachine <|-- LegacyVendingMachine : implements
+    VendingMachine <|-- VendingMachineAdapter : implements
 
-```
-
-**Код**
-
-```typescript
-// Интерфейс внешней библиотеки
-interface ExternalVendingMachine {
-    selectProduct(): void;
-    insertCoin(amount: number): void;
-}
-
-// Класс внешней библиотеки
-class LegacyVendingMachine implements ExternalVendingMachine {
-    selectProduct() {
-        console.log("Selecting product...");
-    }
-
-    insertCoin(amount: number) {
-        console.log(`Inserting ${amount} coins...`);
-    }
-}
-
-
-class VendingMachineAdapter implements VendingMachine {
-    private legacyMachine: LegacyVendingMachine;
-
-    constructor(legacyMachine: LegacyVendingMachine) {
-        this.legacyMachine = legacyMachine;
-    }
-
-    selectProduct() {
-        this.legacyMachine.selectProduct();
-    }
-
-    insertCoin(amount: number) {
-        this.legacyMachine.insertCoin(amount);
-    }
-}
-
-const legacyMachine = new LegacyVendingMachine();
-const adapter = new VendingMachineAdapter(legacyMachine);
-adapter.selectProduct();
-adapter.insertCoin(1.5);
 ```
 
 ### Мост
 
 Мост - структурный шаблон проектирования, который позволяет отделить абстракцию от реализации таким образом, чтобы они могли изменяться независимо друг от друга.
+
+Шаблон «Мост» — это предпочтение компоновки наследованию. Подробности реализации передаются из одной иерархии другому объекту с отдельной иерархией.
+
+**Код**
+
+```C#
+//абстракция
+interface VendingMachine 
+{
+    public void pay(decimal money);
+}
+
+//реализация
+class PaymentMethod 
+{
+    public void pay(decimal money);
+}
+
+//конкретная реализация - наличные
+class CashPayment: PaymentMethod 
+{
+    pay(decimal money) { Log.INFO($"Payed {money} with cash"); }
+}
+
+//конкретная реализация - карта
+class CardPayment: PaymentMethod 
+{
+    pay(amount: number) { Log.INFO($"Payed {money} with card"); }
+}
+
+//абстрактный класс автомата
+abstract class VendingMachine 
+{
+    protected PaymentMethod paymentMethod;
+
+    VendingMachine(PaymentMethod paymentMethod) 
+    {
+        this.paymentMethod = paymentMethod;
+    }
+
+    abstract void pay(decimal money);
+}
+
+//конкретная реализация автомата
+class DrinkVendingMachine: VendingMachine 
+{
+    pay(decimal money) { this.paymentMethod.pay(money); }
+}
+```
 
 **Схема**
 
@@ -290,75 +387,62 @@ classDiagram
     DrinkVendingMachine ..> PaymentMethod : uses
 ```
 
-**Код**
-
-```typescript
-// Абстракция
-interface VendingMachine {
-    pay(amount: number): void;
-}
-
-// Реализация
-interface PaymentMethod {
-    pay(amount: number): void;
-}
-
-// Конкретная реализация - наличные
-class CashPayment implements PaymentMethod {
-    pay(amount: number) {
-        console.log(`Paying ${amount} with cash...`);
-    }
-}
-
-// Конкретная реализация - карта
-class CardPayment implements PaymentMethod {
-    pay(amount: number) {
-        console.log(`Paying ${amount} with card...`);
-    }
-}
-
-// Абстрактный класс автомата
-abstract class VendingMachine {
-    protected paymentMethod: PaymentMethod;
-
-    constructor(paymentMethod: PaymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
-
-    abstract pay(amount: number): void;
-}
-
-// Конкретная реализация автомата
-class DrinkVendingMachine extends VendingMachine {
-    pay(amount: number) {
-        this.paymentMethod.pay(amount);
-    }
-}
-
-const cashPayment = new CashPayment();
-const cardPayment = new CardPayment();
-
-const vendingMachine1 = new DrinkVendingMachine(cashPayment);
-const vendingMachine2 = new DrinkVendingMachine(cardPayment);
-
-vendingMachine1.pay(1.5);
-vendingMachine2.pay(1.5);
-```
-
 ### Компоновщик
 
-Компоновщик - структурный шаблон проектирования, который позволяет клиентам обращаться к отдельным объектам и композициям объектов одинаковым образом. Он позволяет создавать древовидные структуры из объектов и работать с ними так, будто это одиночные объекты.
+Шаблон «Компоновщик» описывает общий порядок обработки группы объектов, словно это одиночный экземпляр объекта. Суть шаблона — компонование объектов в древовидную структуру для представления иерархии от частного к целому. Шаблон позволяет клиентам одинаково обращаться к отдельным объектам и к группам объектов.
+
+Компоновщик — структурный шаблон проектирования, который позволяет клиентам обращаться к отдельным объектам и композициям объектов одинаковым образом. Он позволяет создавать древовидные структуры из объектов и работать с ними так, будто это одиночные объекты.
+
+**Код**
+
+```C#
+// Компонент
+interface VendingComponent 
+{
+    public decimal getPrice();
+}
+
+// Листовой компонент - продукт
+class Product: VendingComponent 
+{
+    private decimal price;
+
+    constructor(decimal price) { this.price = price; }
+
+    public decimal getPrice() 
+    {
+        return this.price;
+    }
+}
+
+// Контейнерный компонент - группа продуктов
+class ProductGroup: VendingComponent 
+{
+    private List<VendingComponent> products = new List<VendingComponent>();
+
+    addProduct(VendingComponent product) 
+    {
+        this.products.Add(product);
+    }
+
+    public decimal getPrice(): number 
+    {
+        return this.products.Sum();
+    }
+}
+```
 
 **Схема**
 
 ```mermaid
 classDiagram
-    interface VendingComponent
+    class VendingComponent {
+        getPrice(): number
+    }
     
     class Product {
-        -name: string
         -price: number
-        +constructor(name: string, price: number)
+        +constructor(price: number)
         +getPrice(): number
     }
 
@@ -373,80 +457,87 @@ classDiagram
     ProductGroup --> "*" Product : contains
 ```
 
-**Код**
-
-```typescript
-// Компонент
-interface VendingComponent {
-    getPrice(): number;
-}
-
-// Листовой компонент - продукт
-class Product implements VendingComponent {
-    constructor(private name: string, private price: number) {}
-
-    getPrice(): number {
-        return this.price;
-    }
-}
-
-// Контейнерный компонент - группа продуктов
-class ProductGroup implements VendingComponent {
-    private products: VendingComponent[] = [];
-
-    addProduct(product: VendingComponent) {
-        this.products.push(product);
-    }
-
-    getPrice(): number {
-        return this.products.reduce((total, product) => total + product.getPrice(), 0);
-    }
-}
-
-// Использование
-const cola = new Product("Cola", 1.5);
-const chips = new Product("Chips", 2);
-
-const productGroup = new ProductGroup();
-productGroup.addProduct(cola);
-productGroup.addProduct(chips);
-
-console.log(productGroup.getPrice());
-```
-
 ### Декоратор
 
+Шаблон «Декоратор» позволяет подключать к объекту дополнительное поведение (статически или динамически), не влияя на поведение других объектов того же класса. Шаблон часто используется для соблюдения принципа единственной обязанности (Single Responsibility Principle), поскольку позволяет разделить функциональность между классами для решения конкретных задач.
+
 Декоратор - это структурный шаблон проектирования, который позволяет добавлять новое поведение или функциональность объекту, не изменяя его основной структуры.
+
+**Код**
+
+```C#
+// Интерфейс продукта
+interface Product 
+{
+    public string getDescription();
+    public decimal getPrice();
+}
+
+// Конкретный продукт
+class Drink: Product 
+{
+    getDescription() { return "Cola"; }
+    getPrice() { return 1.5; }
+}
+
+//абстрактный декоратор
+abstract class ProductDecorator: Product 
+{
+    private Product product;
+
+    ProductDecorator(Product product) { this.product = product; }
+
+    public string getDescription() { return this.product.getDescription(); }
+
+    public decimal getPrice() { return this.product.getPrice(); }
+}
+
+// декоратор льда
+class IceDecorator: ProductDecorator 
+{
+    public string getDescription() { return $"{this.product.getDescription()} with ice"; }
+
+    public decimal getPrice() { return this.product.getPrice() + 0.3; }
+}
+
+//декоратор лимона 
+class LemonDecorator: ProductDecorator 
+{
+    public string getDescription() { return $"{this.product.getDescription()} with lemon"; }
+
+    public decimal getPrice() { return this.product.getPrice() + 0.5; }
+}
+```
 
 **Схема**
 
 ```mermaid
 classDiagram
     class Product {
-        +getDescription(): string
-        +getPrice(): number
+        getDescription(): string
+        getPrice(): decimal
     }
 
     class Drink {
         +getDescription(): string
-        +getPrice(): number
+        +getPrice(): decimal
     }
 
     class ProductDecorator {
         -product: Product
         +constructor(product: Product)
         +getDescription(): string
-        +getPrice(): number
+        +getPrice(): decimal
     }
 
     class IceDecorator {
         +getDescription(): string
-        +getPrice(): number
+        +getPrice(): decimal
     }
 
     class LemonDecorator {
         +getDescription(): string
-        +getPrice(): number
+        +getPrice(): decimal
     }
 
     Product <|.. Drink : implements
@@ -456,75 +547,44 @@ classDiagram
     Product --> ProductDecorator : uses
 ```
 
-**Код**
-
-```typescript
-// Интерфейс продукта
-interface Product {
-    getDescription(): string;
-    getPrice(): number;
-}
-
-// Конкретный продукт
-class Drink implements Product {
-    getDescription() {
-        return "Cola";
-    }
-
-    getPrice() {
-        return 1.5;
-    }
-}
-
-// Декоратор
-abstract class ProductDecorator implements Product {
-    constructor(protected product: Product) {}
-
-    getDescription(): string {
-        return this.product.getDescription();
-    }
-
-    getPrice(): number {
-        return this.product.getPrice();
-    }
-}
-
-// Конкретные декораторы
-class IceDecorator extends ProductDecorator {
-    getDescription(): string {
-        return `${this.product.getDescription()} with ice`;
-    }
-
-    getPrice(): number {
-        return this.product.getPrice() + 0.5;
-    }
-}
-
-class LemonDecorator extends ProductDecorator {
-    getDescription(): string {
-        return `${this.product.getDescription()} with lemon`;
-    }
-
-    getPrice(): number {
-        return this.product.getPrice() + 0.3;
-    }
-}
-
-let drink: Product = new Drink();
-console.log(drink.getDescription(), drink.getPrice()); 
-
-drink = new IceDecorator(drink);
-console.log(drink.getDescription(), drink.getPrice()); 
-
-drink = new LemonDecorator(drink);
-console.log(drink.getDescription(), drink.getPrice()); 
-```
-
 ## Поведенческие шаблоны
 
 ### Цепочка обязанностей
 
+Шаблон «Цепочка ответственности» содержит исходный управляющий объект и ряд обрабатывающих объектов. Каждый обрабатывающий объект содержит логику, определяющую типы командных объектов, которые он может обрабатывать, а остальные передаются по цепочке следующему обрабатывающему объекту.
+
 Цепочка обязанностей - поведенческий шаблон проектирования, который позволяет передавать запросы последовательно по цепочке обработчиков, пока один из них не обработает запрос.
+
+**Код**
+
+```C# 
+// Обработчик запроса
+interface Handler 
+{
+    public void setNext(Handler handler);
+    public void handleRequest(decimal amount);
+}
+
+// Конкретный обработчик
+class StockManager: Handler 
+{
+    private Handler? nextHandler;
+
+    public void setNext(Handler handler) { this.nextHandler = handler; }
+
+    public void handleRequest(decimal amount) 
+    {
+        if (amount >= 10 & amount > 0) {
+            Log.INFO("Stock refilled");
+        } else if (this.nextHandler != null) {
+            Log.INFO("Passing request to next handler");
+            this.nextHandler.handleRequest(amount - 1);
+        } else {
+            Log.INFO("Unable to handle request");
+        }
+    }
+}
+```
 
 **Схема**
 
@@ -541,69 +601,66 @@ classDiagram
         +handleRequest(amount: number): void
     }
 
-    class Cashier {
-        +setNext(handler: Handler): Handler
-        +handleRequest(amount: number): void
-    }
-
-    class Manager {
-        +setNext(handler: Handler): Handler
-        +handleRequest(amount: number): void
-    }
-
     Handler <|.. StockManager : implements
-    Handler <|.. Cashier : implements
-    Handler <|.. Manager : implements
-```
-
-**Код**
-
-```typescript
-// Обработчик запроса
-interface Handler {
-    setNext(handler: Handler): Handler;
-    handleRequest(amount: number): void;
-}
-
-// Конкретный обработчик
-class StockManager implements Handler {
-    private nextHandler: Handler;
-
-    setNext(handler: Handler): Handler {
-        this.nextHandler = handler;
-        return handler;
-    }
-
-    handleRequest(amount: number): void {
-        if (amount >= 10) {
-            console.log("Stock refilled");
-        } else if (this.nextHandler) {
-            console.log("Passing request to next handler");
-            this.nextHandler.handleRequest(amount);
-        } else {
-            console.log("Unable to handle request");
-        }
-    }
-}
-
-
-const stockManager = new StockManager();
-stockManager.setNext(new Cashier()).setNext(new Manager()); // Cashier - абстрактный получатель команды, например, для проведения оплаты продукта
-
-stockManager.handleRequest(15); // Output: Stock refilled
-stockManager.handleRequest(5);  // Output: Passing request to next handler
+    StockManager <|.. StockManager : contains
 ```
 
 ### Команда
 
+В шаблоне «Команда» объект используется для инкапсуляции всей информации, необходимой для выполнения действия либо для его инициирования позднее. Информация включает в себя имя метода; объект, владеющий методом; значения параметров метода.
+
 Команда - поведенческий паттерн проектирования, который превращает запросы в объекты, позволяя передавать их как аргументы при вызове методов, ставить запросы в очередь, логировать их, а также поддерживать отмену операций.
+
+**Код**
+
+```C#
+//команда
+interface Command 
+{
+    public void execute();
+}
+
+//получатель
+class VendingMachine {
+    orderDrink(): void {
+        console.log("Ordering drink...");
+    }
+}
+
+//конкретная команда
+class OrderDrinkCommand: Command 
+{
+    private VendingMachine vendingMachine;
+
+    OrderDrinkCommand(VendingMachine vendingMachine) { this.vendingMachine = vendingMachine; }
+
+    public void execute() { this.vendingMachine.orderDrink(); }
+}
+
+//исполнитель команд
+class Invoker 
+{
+    private Command? command;
+
+    public void setCommand(command: Command) { this.command = command; }
+
+    public void executeCommand()
+    {
+        if (this.command) {
+            this.command.execute();
+        } else {
+            Log.WARN("No command set");
+        }
+    }
+}
+```
 
 **Схема**
 
 ```mermaid
 classDiagram
     class Command {
-        +execute(): void
+        execute(): void
     }
 
     class OrderDrinkCommand {
@@ -627,58 +684,59 @@ classDiagram
     Invoker *-- Command : works with
 ```
 
+### Итератор
+
+В этом шаблоне итератор используется для перемещения по контейнеру и обеспечения доступа к элементам контейнера. Шаблон подразумевает отделение алгоритмов от контейнера. В каких-то случаях алгоритмы, специфичные для этого контейнера, не могут быть отделены.
+
+Итератор - поведенческий шаблон проектирования. Представляет собой объект, позволяющий получить последовательный доступ кэлементам объекта-агрегата без использования описаний каждого из агрегированных объектов.
+
 **Код**
 
-```typescript
-// Команда
-interface Command {
-    execute(): void;
+```C#
+//итератор
+interface Iterator<T> 
+{
+    public bool hasNext();
+    public T? next();
 }
 
-// Конкретная команда
-class OrderDrinkCommand implements Command {
-    constructor(private vendingMachine: VendingMachine) {}
-
-    execute(): void {
-        this.vendingMachine.orderDrink();
-    }
+//агрегатор
+interface Aggregator<T>
+{
+    public Iterator<T> getIterator(): ;
 }
 
-// Получатель
-class VendingMachine {
-    orderDrink(): void {
-        console.log("Ordering drink...");
-    }
-}
+//конкретный итератор
+class ProductIterator<T>: Iterator<T> 
+{
+    private List<T> products;
+    private int position;
 
-// Исполнитель команд
-class Invoker {
-    private command: Command | null = null;
+    public ProductIterator(List<T> products) { this.products = products; }
 
-    setCommand(command: Command): void {
-        this.command = command;
-    }
+    public bool hasNext() { return this.position < this.products.length; }
 
-    executeCommand(): void {
-        if (this.command) {
-            this.command.execute();
+    public T? next() 
+    {
+        if (this.hasNext()) {
+            return this.products[this.position + 1];
         } else {
-            console.log("No command set");
+            return null;
         }
     }
 }
 
-const vendingMachine = new VendingMachine();
-const orderDrinkCommand = new OrderDrinkCommand(vendingMachine);
-const invoker = new Invoker();
+//конкретный агрегатор
+class VendingMachineProducts<T>: Aggregator<T> {
+    private List<T> products = new List<T>();
 
-invoker.setCommand(orderDrinkCommand);
-invoker.executeCommand(); 
+    public void addProduct(T product) {
+        this.products.Add(product);
+    }
+
+    public Iterator<T> getIterator() { return new ProductIterator(this.products); }
+}
 ```
-
-### Итератор
-
-Итератор - поведенческий шаблон проектирования. Представляет собой объект, позволяющий получить последовательный доступ кэлементам объекта-агрегата без использования описаний каждого из агрегированных объектов.
 
 **Схема**
 
@@ -686,7 +744,7 @@ invoker.executeCommand();
 classDiagram
     class Iterator {
         hasNext(): boolean
-        next(): any
+        next(): T?
     }
 
     class Aggregator {
@@ -694,15 +752,15 @@ classDiagram
     }
 
     class ProductIterator {
-        -products: string[]
+        -products: T[]
         -position: number = 0
-        constructor(products: string[])
+        constructor(products: T[])
         hasNext(): boolean
-        next(): string | null
+        next(): T?
     }
 
     class VendingMachineProducts {
-        -products: string[]
+        -products: T[]
         addProduct(product: string): void
         getIterator(): Iterator
     }
@@ -712,68 +770,41 @@ classDiagram
     Iterator <|-- ProductIterator : implements
 ```
 
-**Код**
-
-```typescript
-// Итератор
-interface Iterator<T> {
-    hasNext(): boolean;
-    next(): T | null;
-}
-
-// Агрегат
-interface Aggregator {
-    getIterator(): Iterator<string>;
-}
-
-// Конкретный итератор
-class ProductIterator implements Iterator<string> {
-    private products: string[];
-    private position: number = 0;
-
-    constructor(products: string[]) {
-        this.products = products;
-    }
-
-    hasNext(): boolean {
-        return this.position < this.products.length;
-    }
-
-    next(): string | null {
-        if (this.hasNext()) {
-            return this.products[this.position++];
-        } else {
-            return null;
-        }
-    }
-}
-
-// Конкретный агрегат
-class VendingMachineProducts implements Aggregator {
-    private products: string[] = [];
-
-    addProduct(product: string): void {
-        this.products.push(product);
-    }
-
-    getIterator(): Iterator<string> {
-        return new ProductIterator(this.products);
-    }
-}
-
-const vendingMachineProducts = new VendingMachineProducts();
-vendingMachineProducts.addProduct("Cola");
-vendingMachineProducts.addProduct("Chips");
-
-const iterator = vendingMachineProducts.getIterator();
-while (iterator.hasNext()) {
-    console.log(iterator.next());
-}
-```
-
 ### Наблюдатель
 
+В шаблоне «Наблюдатель» есть объект («субъект»), ведущий список своих «подчинённых» («наблюдателей») и автоматически уведомляющий их о любом изменении своего состояния, обычно с помощью вызова одного из их методов.
+
 Наблюдатель - способ организации взаимодействия между объектами, где один объект наблюдает за изменениями в другом и автоматически получает уведомления о таких изменениях.
+
+**Код**
+
+```C#
+// Наблюдатель
+interface Observer<T> {
+    public void update(T product);
+}
+
+// Конкретный наблюдатель
+class Customer<T>: Observer<T> { 
+    public void update(T: string) { Log.INFO($"Customer: {product} is available"); }
+}
+
+// Наблюдаемый объект
+class ProductSubject<T> {
+    private List<Observer> observers = List<Observer>();
+
+    public void addObserver(Observer observer) { this.observers.Add(observer); }
+
+    public void removeObserver(Observer observer) 
+    { 
+        this.observers = this.observers.Remove(observer);
+    }
+
+    public void notifyObservers(T product): void {
+        this.observers.ForEach(observer => observer.update(product));
+    }
+}
+```
 
 **Схема**
 
@@ -787,7 +818,7 @@ classDiagram
     }
 
     class Observer {
-        +update(product: string): void
+        update(product: string): void
     }
 
     class Customer {
@@ -798,51 +829,39 @@ classDiagram
     ProductSubject <-- Customer : uses
 ```
 
-**Код**
-
-```typescript
-// Наблюдаемый объект
-class ProductSubject {
-    private observers: Observer[] = [];
-
-    addObserver(observer: Observer): void {
-        this.observers.push(observer);
-    }
-
-    removeObserver(observer: Observer): void {
-        this.observers = this.observers.filter(o => o !== observer);
-    }
-
-    notifyObservers(product: string): void {
-        this.observers.forEach(observer => observer.update(product));
-    }
-}
-
-// Наблюдатель
-interface Observer {
-    update(product: string): void;
-}
-
-// Конкретный наблюдатель
-class Customer implements Observer {
-    update(product: string): void {
-        console.log(`Customer: ${product} is available`);
-    }
-}
-
-const productSubject = new ProductSubject();
-const customer1 = new Customer();
-const customer2 = new Customer();
-
-productSubject.addObserver(customer1);
-productSubject.addObserver(customer2);
-
-productSubject.notifyObservers("Cola");
-```
-
 ### Шаблонный метод
 
+«Шаблонный метод» — это поведенческий шаблон, определяющий основу алгоритма и позволяющий наследникам переопределять некоторые шаги алгоритма, не изменяя его структуру в целом.
+
 Шаблонный метод — паттерн проектирования, который определяет скелет алгоритма в базовом классе, но позволяет подклассам переопределить некоторые шаги этого алгоритма, не меняя его общей структуры.
+
+**Код**
+
+```C#
+// Абстрактный класс вендингового автомата
+abstract class VendingMachine 
+{
+    // Шаблонный метод
+    public void processOrder() {
+        this.selectProduct();
+        this.processPayment();
+        this.deliverProduct();
+    }
+
+    abstract void selectProduct();
+    abstract void processPayment();
+    abstract void deliverProduct();
+}
+
+// Конкретная реализация вендингового автомата
+class DrinkVendingMachine: VendingMachine {
+    public void selectProduct() { Log.INFO("Selecting drink..."); }
+
+    public void processPayment() { Log.INFO("Processing payment for drink..."); }
+
+    public void deliverProduct() { Log.INFO("Delivering drink..."); }
+}
+```
 
 **Схема**
 
@@ -850,9 +869,9 @@ productSubject.notifyObservers("Cola");
 classDiagram
     class VendingMachine {
         +processOrder(): void
-        +selectProduct(): void
-        +processPayment(): void
-        +deliverProduct(): void
+        selectProduct(): void
+        processPayment(): void
+        deliverProduct(): void
     }
 
     class DrinkVendingMachine {
@@ -862,42 +881,4 @@ classDiagram
     }
 
     VendingMachine <|-- DrinkVendingMachine : extends
-
-    VendingMachine <-- DrinkVendingMachine : uses
-```
-
-**Код**
-
-```typescript
-// Абстрактный класс вендингового автомата
-abstract class VendingMachine {
-    // Шаблонный метод
-    processOrder(): void {
-        this.selectProduct();
-        this.processPayment();
-        this.deliverProduct();
-    }
-
-    abstract selectProduct(): void;
-    abstract processPayment(): void;
-    abstract deliverProduct(): void;
-}
-
-// Конкретная реализация вендингового автомата
-class DrinkVendingMachine extends VendingMachine {
-    selectProduct(): void {
-        console.log("Selecting drink...");
-    }
-
-    processPayment(): void {
-        console.log("Processing payment for drink...");
-    }
-
-    deliverProduct(): void {
-        console.log("Delivering drink...");
-    }
-}
-
-const drinkVendingMachine = new DrinkVendingMachine();
-drinkVendingMachine.processOrder();
 ```
